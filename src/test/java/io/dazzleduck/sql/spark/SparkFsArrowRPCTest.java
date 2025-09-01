@@ -4,7 +4,6 @@ import com.typesafe.config.ConfigFactory;
 import io.dazzleduck.sql.flight.server.auth2.AuthUtils;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.errors.*;
 import org.apache.arrow.flight.*;
 import org.apache.arrow.flight.sql.FlightSqlClient;
 import org.apache.arrow.memory.BufferAllocator;
@@ -21,9 +20,6 @@ import org.testcontainers.containers.Network;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -65,7 +61,7 @@ public class SparkFsArrowRPCTest {
     }
 
     @BeforeAll
-    public static void setup() throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException, SQLException, InterruptedException {
+    public static void setup() throws Exception {
         minio.start();
         minioClient = MinioContainerTestUtil.createClient(minio);
         minioClient.makeBucket(MakeBucketArgs.builder().bucket(MinioContainerTestUtil.TEST_BUCKET_NAME).build());
@@ -210,7 +206,7 @@ public class SparkFsArrowRPCTest {
         var schemaOption = new HeaderCallOption(headers);
         var info = FlightSqlClientPool.INSTANCE.getInfo(options, "select 1", schemaOption);
         Assertions.assertNotNull(info);
-        try( var stream = FlightSqlClientPool.INSTANCE.getStream(options, info.getEndpoints().getFirst())) {
+        try( var stream = FlightSqlClientPool.INSTANCE.getStream(options, info.getEndpoints().get(0))) {
 
             var root = stream.getRoot();
             var batch = 0;

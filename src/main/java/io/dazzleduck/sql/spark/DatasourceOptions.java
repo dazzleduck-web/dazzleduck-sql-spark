@@ -24,9 +24,15 @@ public record DatasourceOptions(
         var partitionColumnString = properties.get(PARTITION_COLUMNS_KEY);
         var timeoutString =properties.get(CONNECTION_TIMEOUT);
         if(timeoutString == null) {
-            throw new RuntimeException("timeout value is required");
+            throw new RuntimeException("%s value is required".formatted(
+            ));
         }
-        var timeout = Duration.parse(timeoutString);
+        Duration timeout;
+        try {
+            timeout = Duration.parse(timeoutString);
+        } catch (Exception e ){
+            throw new RuntimeException("Unable to parse timeout value %s. The formats accepted are based on the ISO-8601 duration format PnDTnHnMn.nS with days considered to be exactly 24 hours".formatted(timeoutString));
+        }
         var propsWithout = new Properties();
         properties.forEach( (key, value) -> {
             if(!EXCLUDE_PROPS.contains(key))

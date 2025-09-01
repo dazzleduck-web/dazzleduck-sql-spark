@@ -76,6 +76,42 @@ public class DuckDBExpressionSQLBuilder extends V2ExpressionSQLBuilder {
     }
 
     private String buildCast(DataType dataType) {
+        if (dataType instanceof StructType s) {
+            var fields = s.fields();
+            String inner = Arrays.stream(fields).map(f -> {
+                String cast = buildCast(f.dataType());
+                return jdbcDialect.quoteIdentifier(f.name()) + " " + cast;
+            }).collect(Collectors.joining(", "));
+            return String.format("STRUCT(%s)", inner);
+        } else if (dataType instanceof MapType m) {
+            String keyType = buildCast(m.keyType());
+            String valueType = buildCast(m.valueType());
+            return String.format("MAP(%s, %s)", keyType, valueType);
+        } else if (dataType instanceof DecimalType d) {
+            return String.format("Decimal(%s, %s)", d.precision(), d.scale());
+        } else if (dataType instanceof ArrayType a) {
+            String childCast = buildCast(a.elementType());
+            return String.format("%s[]", childCast);
+        } else if (dataType instanceof TimestampType) {
+            return "TIMESTAMP";
+        } else if (dataType instanceof StringType) {
+            return "VARCHAR";
+        } else if (dataType instanceof IntegerType) {
+            return "INTEGER";
+        } else if (dataType instanceof DateType) {
+            return "DATE";
+        } else if (dataType instanceof LongType) {
+            return "BIGINT";
+        } else if (dataType instanceof DoubleType) {
+            return "DOUBLE";
+        } else if (dataType instanceof FloatType) {
+            return "FLOAT";
+        } else {
+            throw new IllegalArgumentException(dataType.toString());
+        }
+    }
+    /*
+    private String buildCast(DataType dataType) {
         switch (dataType) {
             case StructType s -> {
                 var fields = s.fields();
@@ -122,6 +158,8 @@ public class DuckDBExpressionSQLBuilder extends V2ExpressionSQLBuilder {
         }
     }
 
+     */
+
 
     public static String translateSchema(StructType st) {
         return Arrays.stream(st.fields()).map( structField -> {
@@ -138,6 +176,77 @@ public class DuckDBExpressionSQLBuilder extends V2ExpressionSQLBuilder {
                 "UNION ALL BY NAME\n" +
                 "FROM %s".formatted(source);
     }
+
+    public static String translateDataType(DataType dataType) {
+        if (dataType instanceof IntegerType) {
+            return "int";
+        } else if (dataType instanceof LongType) {
+            return "bigint";
+        } else if (dataType instanceof DoubleType) {
+            return "double";
+        } else if (dataType instanceof FloatType) {
+            return "float";
+        } else if (dataType instanceof BooleanType) {
+            return "boolean";
+        } else if (dataType instanceof StringType) {
+            return "varchar";
+        } else if (dataType instanceof BinaryType) {
+            return "binary";
+        } else if (dataType instanceof TimestampType) {
+            return "timestamp";
+        } else if (dataType instanceof DateType) {
+            return "date";
+        } else if (dataType instanceof TimestampNTZType) {
+            return "timestampz";
+        } else if (dataType instanceof DecimalType d) {
+            return "decimal(" + d.precision() + "," + d.scale() + ")";
+        } else if (dataType instanceof ArrayType arrayType) {
+            return translateDataType(arrayType.elementType()) + "[]";
+        } else if (dataType instanceof MapType m) {
+            String keyType = translateDataType(m.keyType());
+            String valueType = translateDataType(m.valueType());
+            return String.format("MAP(%s, %s)", keyType, valueType);
+        } else if (dataType instanceof StructType st) {
+            String inner = Arrays.stream(st.fields())
+                    .map(field -> field.name() + " " + translateDataType(field.dataType()))
+                    .collect(Collectors.joining(", "));
+            return String.format("STRUCT(%s)", inner);
+        } else {
+            throw new UnsupportedOperationException("Not supported: " + dataType);
+        }
+    }
+    /*
+    public static String translateDataType(DataType dataType) {
+        return switch (dataType) {
+            case IntegerType i -> "int";
+            case LongType l -> "bigint";
+            case DoubleType d -> "double";
+            case FloatType f -> "float";
+            case BooleanType b -> "boolean";
+            case StringType s -> "varchar";
+            case BinaryType b -> "binary";
+            case TimestampType t -> "timestamp";
+            case DateType t -> "date";
+            case TimestampNTZType t -> "timestampz";
+            case DecimalType d -> "decimal(" + d.precision() + "," + d.scale() + ")";
+            case ArrayType arrayType -> translateDataType(arrayType.elementType()) + "[]";
+            case MapType m -> {
+                String keyType = translateDataType(m.keyType());
+                String valueType = translateDataType(m.valueType());
+                // Note: The original code was missing a closing parenthesis.
+                yield String.format("MAP(%s, %s)", keyType, valueType);
+            }
+            case StructType st -> {
+                String inner = Arrays.stream(st.fields())
+                        .map(field -> field.name() + " " + translateDataType(field.dataType()))
+                        .collect(Collectors.joining(", "));
+                yield String.format("STRUCT(%s)", inner);
+            }
+            default -> throw new UnsupportedOperationException("Not supported: " + dataType);
+        };
+    }
+
+
     public static String translateDataType(DataType dataType) {
         switch (dataType) {
             case IntegerType i -> {
@@ -193,6 +302,12 @@ public class DuckDBExpressionSQLBuilder extends V2ExpressionSQLBuilder {
             default -> {
                 throw new UnsupportedOperationException("Not supported : " + dataType );
             }
+
+
         }
+
+
     }
+
+     */
 }

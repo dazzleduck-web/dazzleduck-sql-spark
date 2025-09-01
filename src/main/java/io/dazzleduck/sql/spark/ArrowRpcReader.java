@@ -2,7 +2,6 @@ package io.dazzleduck.sql.spark;
 
 
 import org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler;
-import org.apache.arrow.driver.jdbc.client.CloseableEndpointStreamPair;
 import org.apache.arrow.flight.*;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -59,7 +58,7 @@ public class ArrowRpcReader implements PartitionReader<ColumnarBatch> {
             try {
                 //flightClient = FlightSqlClientPool.INSTANCE.getOrCreateClient(datasourceOptions);
                 //closeableEndpointStreamPair = flightClient.getStreams(flightInfo).get(0);
-                flightStream = FlightSqlClientPool.INSTANCE.getStream(datasourceOptions, flightInfo.getEndpoints().getFirst());
+                flightStream = FlightSqlClientPool.INSTANCE.getStream(datasourceOptions, flightInfo.getEndpoints().get(0));
                 init = true;
             } catch (SQLException e) {
                 throw new RuntimeException(e);

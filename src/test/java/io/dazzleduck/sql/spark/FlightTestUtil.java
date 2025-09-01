@@ -17,8 +17,8 @@ import java.util.List;
 
 
 public class FlightTestUtil {
-    public static void createFsServiceAnsStart(int port) throws IOException, NoSuchAlgorithmException, InterruptedException {
-        String[] args = {"--conf", "port=" + port, "--conf", "useEncryption=false", "--conf", "accessMode=RESTRICTED"};
+    public static void createFsServiceAnsStart(int port) throws Exception {
+        String[] args = {"--conf", "flight-sql.port=" + port, "--conf", "useEncryption=false", "--conf", "accessMode=RESTRICTED"};
         Main.main(args);
         System.out.println("Running service ");
         Thread.sleep(2000);

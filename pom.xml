@@ -4,35 +4,24 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>io.dazzleduck.sql</groupId>
     <artifactId>dazzleduck-sql-spark</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.4</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <arrow.version>18.3.0</arrow.version>
         <duckdb.version>1.3.1.0</duckdb.version>
         <typesafe-config.version>1.4.3</typesafe-config.version>
         <calcite.version>1.25.0</calcite.version>
-        <helidon.version>4.2.3</helidon.version>
         <slf4j.version>2.0.16</slf4j.version>
         <jackson.version>2.15.4</jackson.version>
         <hadoop.version>3.3.4</hadoop.version>
         <dazzleduck.version>0.0.4</dazzleduck.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>io.dazzleduck.sql</groupId>
-            <artifactId>dazzleduck-sql-commons</artifactId>
-            <version>${dazzleduck.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.dazzleduck.sql</groupId>
-            <artifactId>dazzleduck-sql-common</artifactId>
-            <version>${dazzleduck.version}</version>
-        </dependency>
         <dependency>
             <groupId>io.dazzleduck.sql</groupId>
             <artifactId>dazzleduck-sql-flight</artifactId>
@@ -43,37 +32,31 @@
             <groupId>org.apache.arrow</groupId>
             <artifactId>arrow-jdbc</artifactId>
             <version>${arrow.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>flight-core</artifactId>
             <version>${arrow.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jcommander</groupId>
-            <artifactId>jcommander</artifactId>
-            <version>2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>flight-sql</artifactId>
             <version>${arrow.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.calcite.avatica</groupId>
-            <artifactId>avatica-core</artifactId>
-            <version>${calcite.version}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.duckdb</groupId>
             <artifactId>duckdb_jdbc</artifactId>
             <version>${duckdb.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.13</artifactId>
             <version>3.5.6</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -109,6 +92,7 @@
         <groupId>org.apache.arrow</groupId>
         <artifactId>flight-sql-jdbc-core</artifactId>
         <version>${arrow.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     <build>
