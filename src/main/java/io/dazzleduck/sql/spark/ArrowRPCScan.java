@@ -42,9 +42,6 @@ public class ArrowRPCScan implements Scan, Batch {
     }
 
 
-    public static FlightInfo getFlightInfo(DatasourceOptions datasourceOptions, String sql) throws JsonProcessingException, SQLException {
-        return FlightSqlClientPool.INSTANCE.getInfo(datasourceOptions, sql);
-    }
 
     @Override
     public InputPartition[] planInputPartitions() {
