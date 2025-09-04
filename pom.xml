@@ -3,11 +3,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>io.dazzleduck.sql</groupId>
     <artifactId>dazzleduck-sql-spark</artifactId>
     <version>0.0.4</version>
-
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -32,19 +30,21 @@
             <groupId>org.apache.arrow</groupId>
             <artifactId>arrow-jdbc</artifactId>
             <version>${arrow.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>flight-core</artifactId>
             <version>${arrow.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>flight-sql</artifactId>
             <version>${arrow.version}</version>
-            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>flight-sql-jdbc-core</artifactId>
+            <version>${arrow.version}</version>
         </dependency>
         <dependency>
             <groupId>org.duckdb</groupId>
@@ -88,12 +88,7 @@
             <version>${hadoop.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-        <groupId>org.apache.arrow</groupId>
-        <artifactId>flight-sql-jdbc-core</artifactId>
-        <version>${arrow.version}</version>
-            <scope>provided</scope>
-        </dependency>
+
     </dependencies>
     <build>
         <plugins>

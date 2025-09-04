@@ -37,9 +37,8 @@ public class SparkFsArrowRPCTest {
     private static final String localTable = "table1";
     private static final String s3Table = "s3_table1";
 
-    private static final String identifierTable = "id_table";
-    private static final String localPathTable = "local_path_table";
-    private static final String s3PathTable = "s3_path_table";
+    private static final String rpcLocalPathTable = "rpc_local_path_table";
+    private static final String rpcS3PathTable = "rpc_s3_path_table";
     private static String schemaDDL  = "time timestamp, key string, value string, quantity bigint, size int, price decimal(10,3), s struct<i1 int>, partition int";
 
     private static final String schemaEvolutionRpcTable = "schema_evolution_rpc";
@@ -81,12 +80,11 @@ public class SparkFsArrowRPCTest {
 
         createLocalTable(schemaDDL, localTable, localPath);
         createLocalTable(schemaDDL, s3Table, s3Path);
-
-        createRPCTestTableWithRemoteId(schemaDDL, identifierTable, "t1");
-        createRPCTestTable(schemaDDL, localPathTable, localPath, "partition" );
-        createRPCTestTable(schemaDDL, s3PathTable, s3Path, "partition");
-
         createLocalTable(schemaOfEvolutionTable, schemaEvolutionLocalTable, schemaEvolutionTablePath);
+
+
+        createRPCTestTable(schemaDDL, rpcLocalPathTable, localPath, "partition" );
+        createRPCTestTable(schemaDDL, rpcS3PathTable, s3Path, "partition");
         createRPCTestTable(schemaOfEvolutionTable, schemaEvolutionRpcTable, schemaEvolutionTablePath, "p");
     }
 
@@ -121,6 +119,7 @@ public class SparkFsArrowRPCTest {
 
     public static String[] getTestSQLs() {
         return new String[]{
+                "select * from %s order by key",
                 "select s.i1 from %s order by key",
                 "select count(*) from %s",
                 "select count(*) from %s where partition = 100",
@@ -152,7 +151,7 @@ public class SparkFsArrowRPCTest {
     @ParameterizedTest
     @MethodSource("getTestSQLs")
     void testSql(String sql) {
-        test(sql,  localPathTable);
+        test(sql, localTable, rpcLocalPathTable);
     }
 
     @ParameterizedTest
@@ -164,23 +163,19 @@ public class SparkFsArrowRPCTest {
     @Test
     void testPathTable() {
         var sql = "select * from %s order by key";
-        test(sql, localPathTable);
+        test(sql, localTable, rpcLocalPathTable);
     }
 
     @Test
     void testS3Table() {
         var sql = "select * from %s order by key";
-        test(sql, s3PathTable);
+        test(sql, s3Table, rpcS3PathTable);
     }
 
     private void test(String sql, String expectedTable, String resultTable) {
         String  expectedTableSql = String.format(sql, expectedTable);
         String  replaceTableSql = String.format(sql, resultTable);
         SparkTestHelper.assertEqual(spark, expectedTableSql, replaceTableSql);
-    }
-    private void test(String sql,
-                      String resultTable) {
-        test(sql, localTable, resultTable);
     }
 
     @Test

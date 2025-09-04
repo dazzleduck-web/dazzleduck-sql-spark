@@ -1,26 +1,16 @@
 package io.dazzleduck.sql.spark;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Streams;
-import io.dazzleduck.sql.spark.extension.FieldReference;
-import org.apache.arrow.flight.FlightEndpoint;
 import org.apache.arrow.flight.FlightInfo;
-import org.apache.arrow.flight.Location;
-import org.apache.arrow.flight.Ticket;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.expressions.Expression;
-import org.apache.spark.sql.connector.expressions.aggregate.*;
+import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
 import org.apache.spark.sql.connector.expressions.filter.Predicate;
 import org.apache.spark.sql.connector.read.*;
 import org.apache.spark.sql.connector.util.V2ExpressionSQLBuilder;
-import org.apache.spark.sql.types.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import scala.Option;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,7 +22,6 @@ public class ArrowRPCScanBuilder implements ScanBuilder,
         SupportsPushDownLimit,
         SupportsPushDownAggregates {
 
-    private static final Logger log = LoggerFactory.getLogger(ArrowRPCScanBuilder.class);
     private final StructType sourceSchema;
     private final DuckDBExpressionSQLBuilder dialect;
     private final DatasourceOptions datasourceOptions;
@@ -42,9 +31,7 @@ public class ArrowRPCScanBuilder implements ScanBuilder,
     private int limit = -1;
     private Aggregation pushedAggregation = null;
     private FlightInfo flightInfo;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private boolean completePushedPredicates = false;
-    private boolean completeAggregationPushdown = false;
 
     public ArrowRPCScanBuilder(StructType sourceSchema,
                                DatasourceOptions datasourceOptions) {
@@ -62,7 +49,7 @@ public class ArrowRPCScanBuilder implements ScanBuilder,
             if(flightInfo == null) {
                 var queryObject = QueryBuilderV2.build(sourceSchema, sourcePartitionSchema, datasourceOptions, outputSchema,
                         pushedPredicates, limit, dialect);
-                flightInfoToSend = ArrowRPCScan.getFlightInfo(datasourceOptions, queryObject);
+                flightInfoToSend = FlightSqlClientPool.INSTANCE.getInfo(datasourceOptions, queryObject);
             } else {
                flightInfoToSend = flightInfo;
             }
@@ -126,20 +113,13 @@ public class ArrowRPCScanBuilder implements ScanBuilder,
                 sourceSchema);
         if(pushedAggregationSchema.isPresent()) {
             var queryObject = QueryBuilderV2.buildForAggregation(sourceSchema, sourcePartitionSchema, datasourceOptions, pushedPredicates, aggregation,  limit, dialect);
-            try {
-                var flightInfo = ArrowRPCScan.getFlightInfo(datasourceOptions, queryObject);
-                this.flightInfo = flightInfo;
-                if( flightInfo.getEndpoints().size() < 2 ) {
-                    this.completeAggregationPushdown = true;
-                    outputSchema = pushedAggregationSchema.get();
-                    pushedAggregation = aggregation;
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch (JsonProcessingException | SQLException e) {
-                log.atError().setCause(e).log("Error fetching data from client ");
-                throw new RuntimeException(e);
+            this.flightInfo = FlightSqlClientPool.INSTANCE.getInfo(datasourceOptions, queryObject);
+            if( flightInfo.getEndpoints().size() == 1 ) {
+                outputSchema = pushedAggregationSchema.get();
+                pushedAggregation = aggregation;
+                return true;
+            } else {
+                return false;
             }
         }
         return false;
@@ -147,7 +127,7 @@ public class ArrowRPCScanBuilder implements ScanBuilder,
 
     @Override
     public boolean pushAggregation(Aggregation aggregation) {
-        if(pushedAggregation != null) {
+        if (pushedAggregation != null) {
             assert pushedAggregation == aggregation;
             return true;
         }

@@ -54,10 +54,7 @@ public class ArrowRpcReader implements PartitionReader<ColumnarBatch> {
 
     private  void init()  {
         if (!init) {
-            ArrowFlightSqlClientHandler flightClient = null;
             try {
-                //flightClient = FlightSqlClientPool.INSTANCE.getOrCreateClient(datasourceOptions);
-                //closeableEndpointStreamPair = flightClient.getStreams(flightInfo).get(0);
                 flightStream = FlightSqlClientPool.INSTANCE.getStream(datasourceOptions, flightInfo.getEndpoints().get(0));
                 init = true;
             } catch (SQLException e) {
@@ -88,7 +85,6 @@ public class ArrowRpcReader implements PartitionReader<ColumnarBatch> {
     @Override
     public ColumnarBatch get() {
         VectorSchemaRoot vectorSchemaRoot = flightStream.getRoot();
-        System.out.println(vectorSchemaRoot.contentToTSVString());
         ColumnVector[] partitionVectors = createPartitionVector(vectorSchemaRoot.getRowCount());
         List<ArrowColumnVector> rpcVectors = vectorSchemaRoot
                 .getFieldVectors()
